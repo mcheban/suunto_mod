@@ -1,0 +1,47 @@
+{
+    "appKeys": {
+        "temperature": 0,
+        "summary": 1,
+        "city": 2,
+        "loading_weather": 3,
+        "failed_weather": 4,
+        "last_updated": 5,
+        "rate": 6,
+        "loading_rate": 7,
+        "failed_rate": 8,
+        "failed_location": 9
+    },
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "mcheban",
+    "longName": "suunto mod",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "fonts/Suunto.ttf",
+                "name": "FONT_SUUNTO_32",
+                "type": "font"
+            },
+            {
+                "file": "fonts/Suunto.ttf",
+                "name": "FONT_SUUNTO_21",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9:]",
+                "file": "fonts/SuuntoBigNumbers.ttf",
+                "name": "FONT_SUUNTO_NUMBERS_70",
+                "type": "font"
+            }
+        ]
+    },
+    "shortName": "suunto mod",
+    "uuid": "7e591018-a436-4258-baf9-799408b9af3e",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
