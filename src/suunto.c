@@ -4,7 +4,7 @@
 #define TIME_INIT_STR "00:00"
 #define DATE_INIT_STR "Mon 01.01"
 #define WEATHER_INIT_STR "No Data"
-#define WEATHER_TIME_INIT_STR "Mon 01.01 00:00  "
+#define WEATHER_TIME_INIT_STR "01.01 00:00"
 #define WEATHER_LOADING_STR "Loading..."
 #define WEATHER_FAILED_STR "No Data"
 #define RATE_FAILED_STR "No Rate Data"
@@ -19,7 +19,7 @@
 #define WEATHER_TIME_HEIGHT 30
 #define BAT_INFO_HEIGHT 21
 #define RATE_HEIGHT 64
-#define RATE_SMALL_HEIGHT 21
+#define RATE_SMALL_HEIGHT 33
 #define TEMPERATURE_HEIGHT 21
 #define SUM_HEIGHT (TIME_HEIGHT + DATE_HEIGHT)
 #define KEY_TEMPERATURE 0
@@ -89,13 +89,18 @@ static void update_weather_info(char* weather_data, char* temperature, time_t la
   
   struct tm *last_updated_time = localtime(&last_updated);
   static char weather_time_buffer[] = WEATHER_TIME_INIT_STR;
-  strftime(weather_time_buffer, sizeof(weather_time_buffer), clock_is_24h_style() ? "%a %d.%m %H:%M" : "%a %d.%m %I:%M", last_updated_time);
+  strftime(weather_time_buffer, 
+           sizeof(weather_time_buffer), 
+           clock_is_24h_style() ? "%d.%m %H:%M" : "%d.%m %I:%M", last_updated_time);
   text_layer_set_text(s_weather_time_layer, weather_time_buffer);
 }
 
-static void update_rate_info(char* rate_data) {
-  text_layer_set_text(s_rate_layer, rate_data);
-  text_layer_set_text(s_rate_small_layer, rate_data);
+static void update_rate_info(char* rate) {
+  static char rate_buffer[32];
+  snprintf(rate_buffer, sizeof(rate_buffer), "USD/RUB: %s", rate);
+  
+  text_layer_set_text(s_rate_layer, rate_buffer);
+  text_layer_set_text(s_rate_small_layer, rate);
 }
 
 static bool load_info_from_cache() {
@@ -118,9 +123,9 @@ static bool load_info_from_cache() {
     int32_t timestamp = persist_read_int(STORAGE_RATE_TIMESTAMP);
     if(((now - timestamp) < RATE_CACHE_AGE_SEC) && persist_exists(STORAGE_RATE)) {
       logm(APP_LOG_LEVEL_INFO, "Using rate from cache");
-      static char rate_buffer[38];
-      persist_read_string(STORAGE_RATE, rate_buffer, sizeof(rate_buffer));
-      update_rate_info(rate_buffer);
+      static char rate[38];
+      persist_read_string(STORAGE_RATE, rate, sizeof(rate));
+      update_rate_info(rate);
       rate_cached = true;
     }
   }
@@ -145,7 +150,8 @@ static void battery_handler(BatteryChargeState bat_state) {
   text_layer_set_text(s_battery_layer, s_bat_buffer);
 }
 
-static void init_text_layer(TextLayer *text_layer, Layer *parent_layer, GFont font, char* init_str, GTextAlignment align) {
+static void init_text_layer(TextLayer *text_layer, Layer *parent_layer, 
+                            GFont font, char* init_str, GTextAlignment align) {
   text_layer_set_background_color(text_layer, GColorBlack);
   text_layer_set_text_color(text_layer, GColorClear);
   text_layer_set_font(text_layer, font);
@@ -165,7 +171,7 @@ static void main_window_load(Window *window) {
   GRect window_bounds = layer_get_bounds(window_layer);
   int win_h = window_bounds.size.h;
   int win_w = window_bounds.size.w;
-  int time_y = (win_h - SUM_HEIGHT) / 2;
+  int time_y = (win_h - SUM_HEIGHT) / 2 - 10;
   int date_y = time_y + TIME_HEIGHT;
   
   s_time_layer = text_layer_create(GRect(4, time_y, win_w, TIME_HEIGHT));
@@ -176,7 +182,7 @@ static void main_window_load(Window *window) {
 
   s_extra_layer = layer_create(GRect(0, 0, win_w, win_h));
   
-  s_fill_layer = text_layer_create(GRect(0, BAT_INFO_HEIGHT, win_w, win_h));
+  s_fill_layer = text_layer_create(GRect(0, 0, win_w, win_h));
   text_layer_set_background_color(s_fill_layer, GColorBlack);
   layer_add_child(s_extra_layer, text_layer_get_layer(s_fill_layer));
   
@@ -192,17 +198,18 @@ static void main_window_load(Window *window) {
   init_text_layer(s_weather_time_layer, s_extra_layer, s_small_font, WEATHER_TIME_INIT_STR, GTextAlignmentCenter);
   
   s_battery_layer = text_layer_create(GRect(1, -6, win_w / 2, BAT_INFO_HEIGHT));
-  init_text_layer(s_battery_layer, window_layer, s_small_font, BAT_INFO_INIT_STR, GTextAlignmentLeft);
+  init_text_layer(s_battery_layer, s_extra_layer, s_small_font, BAT_INFO_INIT_STR, GTextAlignmentLeft);
   
   s_temperature_layer = text_layer_create(GRect(win_w / 2, -6, win_w / 2, TEMPERATURE_HEIGHT));
-  init_text_layer(s_temperature_layer, window_layer, s_small_font, TEMPERATURE_INIT_STR, GTextAlignmentRight);
+  init_text_layer(s_temperature_layer, s_extra_layer, s_small_font, TEMPERATURE_INIT_STR, GTextAlignmentRight);
   
   s_rate_layer = text_layer_create(GRect(0, rate_y, win_w, RATE_HEIGHT));
   init_text_layer(s_rate_layer, s_extra_layer, s_rate_font, RATE_INIT_STR, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_rate_layer, GTextOverflowModeWordWrap);
   
   s_rate_small_layer = text_layer_create(GRect(0, win_h - RATE_SMALL_HEIGHT, win_w, RATE_SMALL_HEIGHT));
-  init_text_layer(s_rate_small_layer, window_layer, s_small_font, RATE_INIT_STR, GTextAlignmentCenter);
+  init_text_layer(s_rate_small_layer, window_layer, s_rate_font, RATE_INIT_STR, GTextAlignmentCenter);
+  layer_set_hidden((Layer*)s_rate_small_layer, true);
   
   layer_set_hidden(s_extra_layer, true);
   layer_add_child(window_layer, s_extra_layer);
@@ -309,11 +316,9 @@ static void inbox_received_callback(DictionaryIterator *dict, void *context) {
   
   Tuple *rate = dict_find(dict, KEY_RATE);
   if(rate) {
-    static char rate_buffer[32];
     int32_t last_updated = time(NULL);
-    snprintf(rate_buffer, sizeof(rate_buffer), "USD/RUB: %s", rate->value->cstring);
-    update_rate_info(rate_buffer);
-    persist_write_string(STORAGE_RATE, rate_buffer);
+    update_rate_info(rate->value->cstring);
+    persist_write_string(STORAGE_RATE, rate->value->cstring);
     persist_write_int(STORAGE_RATE_TIMESTAMP, last_updated);
   }
 }

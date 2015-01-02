@@ -1,15 +1,15 @@
 {
     "appKeys": {
-        "temperature": 0,
-        "summary": 1,
         "city": 2,
-        "loading_weather": 3,
+        "failed_location": 9,
+        "failed_rate": 8,
         "failed_weather": 4,
         "last_updated": 5,
-        "rate": 6,
         "loading_rate": 7,
-        "failed_rate": 8,
-        "failed_location": 9
+        "loading_weather": 3,
+        "rate": 6,
+        "summary": 1,
+        "temperature": 0
     },
     "capabilities": [
         "location"
@@ -20,8 +20,9 @@
     "resources": {
         "media": [
             {
-                "file": "fonts/Suunto.ttf",
-                "name": "FONT_SUUNTO_32",
+                "characterRegex": "[0-9:]",
+                "file": "fonts/SuuntoBigNumbers.ttf",
+                "name": "FONT_SUUNTO_NUMBERS_70",
                 "type": "font"
             },
             {
@@ -30,9 +31,8 @@
                 "type": "font"
             },
             {
-                "characterRegex": "[0-9:]",
-                "file": "fonts/SuuntoBigNumbers.ttf",
-                "name": "FONT_SUUNTO_NUMBERS_70",
+                "file": "fonts/Suunto.ttf",
+                "name": "FONT_SUUNTO_32",
                 "type": "font"
             }
         ]
